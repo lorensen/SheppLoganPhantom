@@ -5,5 +5,6 @@ PROJECT(SheppLoganSurfacePhantom)
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
  
-add_executable(SheppLoganSurfacePhantom MACOSX_BUNDLE SheppLoganSurfacePhantom)
+add_executable(SheppLoganSurfacePhantom MACOSX_BUNDLE
+               SheppLoganSurfacePhantom SheppLoganPhantom)
 target_link_libraries(SheppLoganSurfacePhantom ${VTK_LIBRARIES})
