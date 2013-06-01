@@ -59,11 +59,11 @@ int main (int, char *[])
     transformPart->SetInputConnection(partSource->GetOutputPort());
     transformPart->Update();
     double *bounds = transformPart->GetOutput()->GetBounds();
-    std:cout << parts[i].m_Name << ": "
-             << "(" << bounds[0] << ", " << bounds[1] << "), "
-             << "(" << bounds[2] << ", " << bounds[3] << "), "
-             << "(" << bounds[4] << ", " << bounds[5] << ")"
-             << std::endl;
+    std::cout << parts[i].m_Name << ": "
+              << "(" << bounds[0] << ", " << bounds[1] << "), "
+              << "(" << bounds[2] << ", " << bounds[3] << "), "
+              << "(" << bounds[4] << ", " << bounds[5] << ")"
+              << std::endl;
     
     phantomData->AddInputConnection(transformPart->GetOutputPort());
     }
