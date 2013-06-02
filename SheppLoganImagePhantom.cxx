@@ -4,7 +4,6 @@
 
 #include <vtkParametricFunctionSource.h>
 #include <vtkParametricEllipsoid.h>
-#include <vtkImageEllipsoidSource.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkMatrix4x4.h>
 #include <vtkTransform.h>
@@ -15,6 +14,8 @@
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
 #include "SheppLoganPhantom.h"
+
+double Ellipsoid(double a, double b, double c, double x, double y, double z);
 
 int main (int, char *[])
 {
@@ -98,67 +99,44 @@ int main (int, char *[])
              << partDimensions[2]
              << std::endl;
 
-    // create an image ellipsoid
-    vtkSmartPointer<vtkImageEllipsoidSource> partEllipsoid =
-      vtkSmartPointer<vtkImageEllipsoidSource>::New();
-    partEllipsoid->SetWholeExtent(
-      0, partDimensions[0] - 1,
-      0, partDimensions[1] - 1,
-      0, partDimensions[2] - 1);
-    double partCenter[3] = {0.0, 0.0, 0.0};
-    partEllipsoid->SetCenter(partCenter);
-    partEllipsoid->SetRadius(parts[i].m_Radius);
-    partEllipsoid->SetOutputScalarTypeToFloat();
-    partEllipsoid->SetOutValue(0.0);
-    partEllipsoid->SetInValue(parts[i].m_Value * 100.0);
-    partEllipsoid->Update();
-
     double partOrigin[3];
     partOrigin[0] = partBounds[1] - partDimensions[0] * phantomSpacing[0];
     partOrigin[1] = partBounds[3] - partDimensions[1] * phantomSpacing[1];
     partOrigin[2] = partBounds[5] - partDimensions[2] * phantomSpacing[2];
-    partEllipsoid->GetOutput()->SetOrigin(partOrigin);
-    partEllipsoid->GetOutput()->SetSpacing(phantomSpacing);
 
     vtkSmartPointer<vtkTransform> inverseTransform =    
       vtkSmartPointer<vtkTransform>::New();
     inverseTransform->DeepCopy(transform);
     inverseTransform->Inverse();
     
-    vtkSmartPointer<vtkImplicitVolume> implicitVolume =
-      vtkSmartPointer<vtkImplicitVolume>::New();
-    implicitVolume->SetOutValue(0.0);
-    implicitVolume->SetVolume(partEllipsoid->GetOutput());
-    implicitVolume->SetTransform(inverseTransform);
-    
-#if 0
     // Walk the part ellipsoid and evaluate
     double x, y, z;
-    int i, j, k;
-    for (k = 0, z = partOrigin[2]; k < partDimensions[2]; ++k)
+    int ii, jj, kk;
+
+    for (kk = 0, z = partOrigin[2]; kk < partDimensions[2]; ++kk)
       {
-      z += k * phantomSpacing[2];
-      for (j = 0, y = partOrigin[1]; j < partDimensions[1]; ++j)
+      z += kk * phantomSpacing[2];
+      for (jj = 0, y = partOrigin[1]; jj < partDimensions[1]; ++jj)
         {
-        y += j * phantomSpacing[1];
-        for (i = 0, x = partOrigin[0]; i < partDimensions[0]; ++i)
+        y += jj * phantomSpacing[1];
+        for (ii = 0, x = partOrigin[0]; ii < partDimensions[0]; ++ii)
           {
-          x += i * phantomSpacing[0];
-          double value = implicitVolume->FunctionValue(x, y, z);
-          if (value != 0.0)
+          x += ii * phantomSpacing[0];
+          double value = Ellipsoid(
+            parts[i].m_Radius[0], parts[i].m_Radius[1], parts[i].m_Radius[2],
+            x, y, z);
+          if (value <= 0.0)
             {
             std::cout << x << ", " << y << ", " << z << ": " << value << std::endl;
             }
           }
         }
       }
-#endif
-    vtkSmartPointer<vtkMetaImageWriter> writer =
-      vtkSmartPointer<vtkMetaImageWriter>::New();
-    std::string fileName = parts[i].m_Name + ".mhd";
-    writer->SetFileName(fileName.c_str());
-    writer->SetInputConnection(partEllipsoid->GetOutputPort());
-    writer->Write();
     }
   return EXIT_SUCCESS;
+}
+
+double Ellipsoid(double a, double b, double c, double x, double y, double z)
+{
+  return x*x/a*a + y*y/b*b + z*z/c*c - 1.0;
 }
