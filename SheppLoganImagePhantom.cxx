@@ -21,7 +21,7 @@ int main (int, char *[])
 {
   // Allocate the volume
   double phantomBounds[6] =
-    {-1.0, 1.0, -1.0, 1.0, -1.5, 1.5};
+    {-.8, .8, -1.0, 1.5, -1.5, 1.5};
   int phantomDimension = 256;
   double phantomSpacing[3];
   phantomSpacing[0] = (phantomBounds[1] - phantomBounds[0]) / (phantomDimension - 1);
@@ -71,7 +71,7 @@ int main (int, char *[])
     transformPart->SetInputConnection(partSource->GetOutputPort());
     transformPart->Update();
     double *bounds = transformPart->GetOutput()->GetBounds();
-    std::cout << parts[i].m_Name << ": "
+    std::cout << parts[i].m_Name << " Bounds: "
              << "(" << bounds[0] << ", " << bounds[1] << "), "
              << "(" << bounds[2] << ", " << bounds[3] << "), "
              << "(" << bounds[4] << ", " << bounds[5] << ")"
@@ -88,12 +88,12 @@ int main (int, char *[])
     partDimensions[0] = (partBounds[1] - partBounds[0]) / phantomSpacing[0];
     partDimensions[1] = (partBounds[3] - partBounds[2]) / phantomSpacing[1];
     partDimensions[2] = (partBounds[5] - partBounds[4]) / phantomSpacing[2];
-    std::cout << parts[i].m_Name << ": "
+    std::cout << parts[i].m_Name << " Bounds: "
              << "(" << partBounds[0] << ", " << partBounds[1] << "), "
              << "(" << partBounds[2] << ", " << partBounds[3] << "), "
              << "(" << partBounds[4] << ", " << partBounds[5] << ")"
              << std::endl;
-    std::cout << parts[i].m_Name << ": "
+    std::cout << parts[i].m_Name << " Dimensions: "
              << partDimensions[0] << ", "
              << partDimensions[1] << ", "
              << partDimensions[2]
@@ -103,40 +103,67 @@ int main (int, char *[])
     partOrigin[0] = partBounds[1] - partDimensions[0] * phantomSpacing[0];
     partOrigin[1] = partBounds[3] - partDimensions[1] * phantomSpacing[1];
     partOrigin[2] = partBounds[5] - partDimensions[2] * phantomSpacing[2];
+    std::cout << parts[i].m_Name << " Origin: "
+             << partOrigin[0] << ", "
+             << partOrigin[1] << ", "
+             << partOrigin[2]
+             << std::endl;
 
     vtkSmartPointer<vtkTransform> inverseTransform =    
       vtkSmartPointer<vtkTransform>::New();
     inverseTransform->DeepCopy(transform);
     inverseTransform->Inverse();
-    
+
     // Walk the part ellipsoid and evaluate
     double x, y, z;
     int ii, jj, kk;
 
-    for (kk = 0, z = partOrigin[2]; kk < partDimensions[2]; ++kk)
+    for (kk = 0; kk < partDimensions[2]; ++kk)
       {
-      z += kk * phantomSpacing[2];
-      for (jj = 0, y = partOrigin[1]; jj < partDimensions[1]; ++jj)
+      z = partOrigin[2] + kk * phantomSpacing[2];
+      for (jj = 0; jj < partDimensions[1]; ++jj)
         {
-        y += jj * phantomSpacing[1];
+        y = partOrigin[1] + jj * phantomSpacing[1];
         for (ii = 0, x = partOrigin[0]; ii < partDimensions[0]; ++ii)
           {
-          x += ii * phantomSpacing[0];
+          x = partOrigin[0] + ii * phantomSpacing[0];
+          double pointIn[4], pointOut[4];
+          pointIn[0] = x;
+          pointIn[1] = y;
+          pointIn[2] = z;
+          pointIn[3] = 1.0;
+          inverseTransform->MultiplyPoint(pointIn, pointOut);
+          pointOut[0] /= pointOut[3];
+          pointOut[1] /= pointOut[3];
+          pointOut[2] /= pointOut[3];
+
           double value = Ellipsoid(
             parts[i].m_Radius[0], parts[i].m_Radius[1], parts[i].m_Radius[2],
-            x, y, z);
+            pointOut[0], pointOut[1], pointOut[2]);
           if (value <= 0.0)
             {
-            std::cout << x << ", " << y << ", " << z << ": " << value << std::endl;
+            int ijk[3];
+            double pcoords[3];
+            phantomVolume->ComputeStructuredCoordinates(pointIn, ijk, pcoords);
+            phantomVolume->SetScalarComponentFromDouble(
+              ijk[0], ijk[1], ijk[2], 0,
+              parts[i].m_Value + phantomVolume->GetScalarComponentAsDouble(
+                ijk[0], ijk[1], ijk[2], 0));
+            
             }
           }
         }
       }
     }
+  vtkSmartPointer<vtkMetaImageWriter> writer =
+    vtkSmartPointer<vtkMetaImageWriter>::New();
+  writer->SetFileName("phantom.mhd");
+  writer->SetInputData(phantomVolume);
+  writer->Write();
   return EXIT_SUCCESS;
 }
 
 double Ellipsoid(double a, double b, double c, double x, double y, double z)
 {
-  return x*x/a*a + y*y/b*b + z*z/c*c - 1.0;
+  return x*x/(a*a) + y*y/(b*b) + z*z/(c*c) - 1.0;
 }

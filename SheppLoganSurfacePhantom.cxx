@@ -74,6 +74,7 @@ int main (int, char *[])
   connectivityFilter->SetExtractionModeToAllRegions();
   connectivityFilter->ColorRegionsOn();
   connectivityFilter->Update();
+  connectivityFilter->GetOutput()->Print(std::cout);
 
   vtkSmartPointer<vtkPolyDataMapper> mapper =
     vtkSmartPointer<vtkPolyDataMapper>::New();

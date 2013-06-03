@@ -55,37 +55,38 @@ SheppLoganPhantom::SheppLoganPhantom()
     -0.0800, -0.6050, 0.3810,
     0.0460, 0.0230, 0.0230,
     1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
-    0.01);
+    0.1);
   SheppLoganPhantomPart centerSmallTumor(
     "CenterSmallTumor",
     0.0, -0.6050,0.3810,
     0.0230, 0.0230, 0.0460,
     1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
-    0.01);
+    0.1);
   SheppLoganPhantomPart rightSmallTumor(
     "RightSmallTumor",
     0.0600, -0.6050,0.3810,
     0.0230, 0.0460, 0.0230,
     1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
-    0.01);
+    0.1);
   SheppLoganPhantomPart rightVentricle(
     "RightVentricle",
     0.2200, 0.0, 0.3810,
     0.1100, 0.3100, 0.2540,
     0.9511, -0.3090, 0, 0.3090, 0.9511, 0.0, 0.0, 0.0, 1.0,
-    -0.02);
+    -0.2);
   SheppLoganPhantomPart leftVentricle(
     "LeftVentricle",
     -0.2200, 0.0, 0.3810,
     0.1600, 0.4100, 0.3810,
     -0.9511, -0.3090, 0, -0.3090, 0.9511, 0.0, 0.0, 0.0, 1.0,
-    -0.02);
+    -0.2);
   SheppLoganPhantomPart bloodClot(
     "BloodClot",
     0.5600, -0.4000, 0.3810,
     0.0300, 0.2000, 0.2000,
     0.9192, -0.3381, 0.2020, 0.3452, 0.9385, 0, 0.1896, -0.0697, -0.9794,
-    0.0300);
+    0.300);
+
   m_Parts.push_back(outerSkull);
   m_Parts.push_back(innerSkull);
   m_Parts.push_back(leftEye);
